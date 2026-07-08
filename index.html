@@ -363,14 +363,13 @@
     todayDateEl.textContent = todayStr + ' ' + getWeekday(now);
 
     var storedDate = localStorage.getItem('_lastDate');
+    // 如果日期改变了，只重置“今日已提醒”记录，保留所有历史打卡记录
     if (storedDate && storedDate !== todayStr) {
-      // Clear old date records, keep drugs
-      Object.keys(checkins).forEach(function(k) { if (k !== todayStr) delete checkins[k]; });
-      Object.keys(reminded).forEach(function(k) { if (k !== todayStr) delete reminded[k]; });
-      saveData();
+      reminded = {};                     // 清空提醒记录，让新一天可以重新提醒
     }
+    // 确保今日的 checkins 和 reminded 结构存在
     if (!checkins[todayStr]) checkins[todayStr] = {};
-    if (!reminded[todayStr]) reminded[todayStr] = {};
+    reminded[todayStr] = reminded[todayStr] || {};
     localStorage.setItem('_lastDate', todayStr);
 
     renderAll();
@@ -615,11 +614,13 @@
       days.push(d);
     }
 
-    // Calculate total expected tasks per day based on current drugs
+    // 计算每天应有的服药次数（基于当前药品）
     var totalExpectedPerDay = 0;
     drugs.forEach(function(drug) { totalExpectedPerDay += drug.times.length; });
 
-    var totalDone = 0, totalExpected = 0;
+    var totalDone = 0;
+    var totalExpected = 30 * totalExpectedPerDay; // 总期望打卡次数
+
     var itemsHtml = '';
 
     days.forEach(function(d) {
@@ -627,8 +628,8 @@
       var wk = getWeekday(d);
       var dayData = checkins[dateStr] || {};
       var dayDrugs = {};
+      var dayDoneCount = 0;
 
-      // Collect all check-ins for this day
       Object.keys(dayData).forEach(function(key) {
         if (dayData[key]) {
           var parts = key.split('_');
@@ -636,25 +637,20 @@
           var timeStr = parts[1];
           if (!dayDrugs[drugId]) dayDrugs[drugId] = [];
           dayDrugs[drugId].push(timeStr);
+          dayDoneCount++;
         }
       });
 
-      var dayDone = Object.keys(dayDrugs).reduce(function(sum, id) { return sum + dayDrugs[id].length; }, 0);
-      var dayExpected = totalExpectedPerDay; // simplified: using current drugs
+      totalDone += dayDoneCount;
 
-      // For past dates, we can only count what was recorded
-      // Show check-ins if any
-      var hasAny = Object.keys(dayData).length > 0;
       var statusHtml = '';
-      if (hasAny) {
+      if (Object.keys(dayDrugs).length > 0) {
         Object.keys(dayDrugs).forEach(function(did) {
           var dName = getDrugName(did);
           dayDrugs[did].forEach(function(t) {
             statusHtml += '<span class="history-pill done"><span class="h-time">' + t + '</span> ' + dName + '</span>';
           });
         });
-        totalDone += dayDone;
-        totalExpected += dayDone; // count done items
       } else {
         statusHtml = '<span class="history-empty">无记录</span>';
       }
@@ -669,8 +665,8 @@
         '</li>';
     });
 
-    // Summary
     var rate = totalExpected > 0 ? Math.round(totalDone / totalExpected * 100) : 0;
+
     var summaryHtml = '<div class="history-summary">' +
       '<div class="history-summary-item"><span class="num">' + rate + '%</span><span class="label">打卡率</span></div>' +
       '<div class="history-summary-item"><span class="num">' + totalDone + '</span><span class="label">已完成</span></div>' +
@@ -681,7 +677,8 @@
 
     el.innerHTML = summaryHtml;
   }
-function getDrugName(id) {
+
+  function getDrugName(id) {
     var d = drugs.find(function(x) { return x.id === id; });
     return d ? d.name : '';
   }
