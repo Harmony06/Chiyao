@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light dark">
+<title>每日吃药打卡</title>
+<style>
+  :root {
+    --primary: #10B981;
+    --primary-light: #D1FAE5;
+    --primary-dark: #059669;
+    --primary-50: #ECFDF5;
+    --danger: #EF4444;
+    --danger-light: #FEE2E2;
+    --warning: #F59E0B;
+    --warning-light: #FEF3C7;
+    --bg: #F0FDF4;
+    --bg-secondary: #F8FAFC;
+    --card: rgba(255,255,255,0.85);
+    --card-solid: #FFFFFF;
+    --text: #1E293B;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: rgba(0,0,0,0.08);
+    --border-focus: rgba(16,185,129,0.4);
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+    --shadow-xl: 0 20px 40px -8px rgba(0,0,0,0.1);
+    --radius: 20px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --radius-xs: 8px;
+    --glass-bg: rgba(255,255,255,0.6);
+    --glass-border: rgba(255,255,255,0.8);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0F172A;
+      --bg-secondary: #1E293B;
+      --card: rgba(30,41,59,0.85);
+      --card-solid: #1E293B;
+      --text: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --border: rgba(255,255,255,0.08);
+      --border-focus: rgba(16,185,129,0.5);
+      --shadow: 0 1px 3px rgba(255,255,255,0.04), 0 1px 2px rgba(255,255,255,0.03);
+      --shadow-md: 0 4px 6px -1px rgba(255,255,255,0.05), 0 2px 4px -1px rgba(255,255,255,0.03);
+      --shadow-lg: 0 10px 25px -5px rgba(255,255,255,0.04), 0 8px 10px -6px rgba(255,255,255,0.02);
+      --shadow-xl: 0 20px 40px -8px rgba(255,255,255,0.05);
+      --glass-bg: rgba(30,41,59,0.6);
+      --glass-border: rgba(255,255,255,0.1);
+      --primary-light: rgba(16,185,129,0.25);
+      --primary-dark: #6EE7B7;
+      --primary-50: rgba(16,185,129,0.1);
+      --danger-light: rgba(239,68,68,0.2);
+      --warning-light: rgba(245,158,11,0.2);
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    padding: 0 0 80px 0; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Header ===== */
+  .header {
+    background: linear-gradient(135deg, #10B981, #3B82F6, #8B5CF6);
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+    color: #fff; padding: 28px 20px; text-align: center;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 20px rgba(16,185,129,0.25);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .header .subtitle { font-size: 14px; opacity: 0.9; margin-top: 6px; font-weight: 400; }
+
+  /* ===== Banner ===== */
+  .banner {
+    display: none; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+    color: #92400E; padding: 12px 20px; border-bottom: 1px solid #F59E0B;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; position: relative;
+    animation: bannerSlide 0.3s ease;
+  }
+  @keyframes bannerSlide {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .banner.show { display: flex; }
+  .banner .banner-icon { font-size: 20px; flex-shrink: 0; animation: pulse 2s infinite; }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+  .banner .banner-close {
+    margin-left: auto; font-size: 18px; cursor: pointer;
+    opacity: 0.6; flex-shrink: 0; padding: 4px 8px;
+    border-radius: 8px; transition: all 0.2s;
+  }
+  .banner .banner-close:hover { opacity: 1; background: rgba(0,0,0,0.1); }
+
+  /* ===== Container ===== */
+  .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
+
+  /* ===== Card ===== */
+  .card {
+    background: var(--card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .card-title {
+    font-size: 18px; font-weight: 700; color: var(--text);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .card-title .badge {
+    margin-left: auto; font-size: 12px; font-weight: 500;
+    background: var(--primary-light); color: var(--primary-dark);
+    padding: 4px 12px; border-radius: 20px;
+  }
+
+  /* ===== Form ===== */
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--text-secondary); margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+  .form-row { display: flex; gap: 12px; align-items: flex-start; }
+  .form-row .form-group { flex: 1; }
+  input[type="text"], input[type="time"], input[type="number"] {
+    width: 100%; padding: 14px 16px; border: 2px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 15px;
+    outline: none; transition: all 0.3s ease;
+    background: var(--bg-secondary); color: var(--text);
+    font-family: inherit;
+  }
+  input::placeholder { color: var(--text-muted); }
+  input:focus {
+    border-color: var(--primary);
+    background: var(--card-solid);
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.1);
+  }
+
+  /* ===== Time List ===== */
+  .time-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .time-item {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--primary-50); border: 1px solid var(--primary-light);
+    border-radius: var(--radius-xs); padding: 4px;
+    transition: all 0.2s ease;
+  }
+  .time-item:hover { border-color: var(--primary); }
+  .time-item input[type="time"] {
+    width: 110px; padding: 8px 10px; font-size: 14px;
+    border: none; background: transparent; color: var(--text);
+    border-radius: 6px;
+  }
+  .time-item input[type="time"]:focus { box-shadow: none; background: transparent; }
+  .time-item .remove-time {
+    background: none; border: none; color: var(--danger);
+    cursor: pointer; font-size: 18px; padding: 4px 8px;
+    line-height: 1; border-radius: 6px; transition: all 0.2s;
+  }
+  .time-item .remove-time:hover { background: var(--danger-light); transform: scale(1.1); }
+  .btn-add-time {
+    background: none; border: 2px dashed var(--border);
+    border-radius: var(--radius-xs); padding: 8px 16px; font-size: 13px;
+    color: var(--text-secondary); cursor: pointer; transition: all 0.3s;
+    font-weight: 500;
+  }
+  .btn-add-time:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-50); }
+
+  /* ===== Buttons ===== */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 12px 24px; border: none; border-radius: var(--radius-sm);
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); min-height: 48px;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #fff; width: 100%;
+    box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16,185,129,0.4);
+  }
+  .btn-primary:active { transform: translateY(0) scale(0.98); }
+  .btn-sm { padding: 8px 16px; font-size: 13px; min-height: 36px; border-radius: var(--radius-xs); }
+  .btn-outline {
+    background: transparent; border: 2px solid var(--border); color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-50); }
+  .btn-danger-outline {
+    background: transparent; border: 2px solid var(--danger); color: var(--danger);
+  }
+  .btn-danger-outline:hover { background: var(--danger-light); }
+
+  /* ===== Task List ===== */
+  .task-list { list-style: none; }
+  .task-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 0; border-bottom: 1px solid var(--border);
+    transition: all 0.2s ease;
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-item:hover { background: var(--primary-50); margin: 0 -8px; padding: 16px 8px; border-radius: var(--radius-xs); }
+  .task-time {
+    font-size: 22px; font-weight: 700; color: var(--primary-dark);
+    min-width: 65px; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .task-info { flex: 1; }
+  .task-name { font-size: 16px; font-weight: 600; color: var(--text); }
+  .task-dosage { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+  .task-check {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 2.5px solid var(--border); background: var(--card-solid);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 24px; color: var(--primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0; position: relative; overflow: hidden;
+  }
+  .task-check::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .task-check:hover:not(:disabled)::before { opacity: 1; }
+  .task-check:hover:not(:disabled) { border-color: var(--primary); transform: scale(1.08); }
+  .task-check:active:not(:disabled) { transform: scale(0.92); }
+  .task-check.done {
+    border-color: var(--primary); background: var(--primary); color: #fff;
+    cursor: default;
+    animation: checkBounce 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .task-check:disabled { cursor: default; }
+  @keyframes checkBounce {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.25); }
+    40% { transform: scale(0.9); }
+    60% { transform: scale(1.1); }
+    80% { transform: scale(0.97); }
+    100% { transform: scale(1); }
+  }
+
+  /* ===== Drug List ===== */
+  .drug-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .drug-item:last-child { border-bottom: none; }
+  .drug-item:hover { background: var(--primary-50); margin: 0 -8px; padding: 14px 8px; border-radius: var(--radius-xs); }
+  .drug-info { flex: 1; }
+  .drug-name { font-weight: 600; font-size: 16px; color: var(--text); }
+  .drug-meta { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+  .drug-times { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .drug-time-tag {
+    font-size: 12px; font-weight: 500;
+    background: var(--primary-50); color: var(--primary-dark);
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid var(--primary-light);
+  }
+  .drug-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* ===== Empty State ===== */
+  .empty-state {
+    text-align: center; padding: 40px 20px; color: var(--text-muted);
+  }
+  .empty-state .empty-icon {
+    font-size: 48px; margin-bottom: 14px;
+    filter: grayscale(0.3);
+  }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* ===== Modal ===== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); z-index: 200;
+    align-items: center; justify-content: center; padding: 20px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .modal-overlay.show {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .modal-box {
+    background: var(--card-solid); border-radius: var(--radius);
+    padding: 28px; max-width: 400px; width: 100%;
+    box-shadow: var(--shadow-xl);
+    animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+  .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+  .modal-actions .btn { flex: 1; }
+
+  /* ===== Toast ===== */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: #fff; padding: 14px 28px;
+    border-radius: 28px; font-size: 14px; font-weight: 500; z-index: 300;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    opacity: 0; pointer-events: none;
+    max-width: 90%; text-align: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%) translateY(20px);
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ===== History ===== */
+  .history-summary {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, var(--primary-50), var(--primary-light));
+    border-radius: var(--radius-md); margin-bottom: 18px;
+  }
+  .history-summary-item { text-align: center; flex: 1; min-width: 80px; }
+  .history-summary-item .num {
+    font-size: 30px; font-weight: 800; color: var(--primary-dark);
+    display: block; font-variant-numeric: tabular-nums;
+  }
+  .history-summary-item .label {
+    font-size: 12px; color: var(--text-secondary); margin-top: 4px;
+    font-weight: 500;
+  }
+  .history-list { list-style: none; max-height: 400px; overflow-y: auto; }
+  .history-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: var(--radius-xs); margin-bottom: 4px;
+    font-size: 13px; transition: all 0.2s;
+  }
+  .history-item:hover { background: var(--primary-50); }
+  .history-date { min-width: 90px; font-weight: 600; color: var(--text); font-size: 14px; }
+  .history-weekday { font-size: 12px; color: var(--text-muted); min-width: 36px; font-weight: 500; }
+  .history-status { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .history-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  }
+  .history-pill.done { background: var(--primary-light); color: var(--primary-dark); }
+  .history-pill.miss { background: var(--danger-light); color: var(--danger); }
+  .history-pill .h-time { font-weight: 700; }
+  .history-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
+  .history-rate-bar {
+    height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;
+    margin-top: 8px;
+  }
+  .history-rate-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10B981, #059669);
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 480px) {
+    .container { padding: 14px 12px; }
+    .card { padding: 20px 16px; border-radius: var(--radius-md); }
+    .task-time { font-size: 18px; min-width: 52px; }
+    .header h1 { font-size: 20px; }
+    .header { padding: 22px 16px; }
+  }
+
+  /* ===== Header Decorations ===== */
+  .header {
+    overflow: hidden;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px),
+      linear-gradient(135deg, #10B981, #3B82F6, #8B5CF6);
+    background-size: 24px 24px, 200% 200%;
+  }
+  .header-content {
+    position: relative;
+    z-index: 2;
+  }
+  .header-decor {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .header-pill-left {
+    left: 8%; top: 15%;
+    animation: floatPill1 7s ease-in-out infinite;
+  }
+  .header-pill-right {
+    right: 10%; bottom: 10%;
+    animation: floatPill2 9s ease-in-out infinite;
+  }
+  .header-pill-top {
+    left: 60%; top: -5%;
+    animation: floatPill3 6s ease-in-out infinite;
+  }
+  @keyframes floatPill1 {
+    0%, 100% { transform: translateY(0) rotate(-15deg); }
+    50% { transform: translateY(-8px) rotate(-10deg); }
+  }
+  @keyframes floatPill2 {
+    0%, 100% { transform: translateY(0) rotate(25deg); }
+    50% { transform: translateY(-12px) rotate(30deg); }
+  }
+  @keyframes floatPill3 {
+    0%, 100% { transform: translateY(0) rotate(-5deg) scale(0.8); }
+    50% { transform: translateY(-6px) rotate(0deg) scale(0.85); }
+  }
+
+  /* ===== Section Icons ===== */
+  .section-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  /* ===== Empty State Illustrations ===== */
+  .empty-illustration {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 16px;
+    display: block;
+  }
+
+  /* ===== Card Accent Bar ===== */
+  .card-accent {
+    position: relative;
+  }
+  .card-accent::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20px; bottom: 20px;
+    width: 4px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+  }
+  .card-accent { padding-left: 28px; }
+
+  /* ===== History Rate Bar Texture ===== */
+  .history-rate-bar {
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 4px,
+      rgba(255,255,255,0.15) 4px,
+      rgba(255,255,255,0.15) 8px
+    );
+    background-color: var(--border);
+  }
+
+  /* ===== Bottom Decoration ===== */
+  .bottom-decor {
+    text-align: center;
+    padding: 40px 0 20px;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    .bottom-decor { opacity: 0.04; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-decor header-pill-left">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <rect x="8" y="14" width="32" height="20" rx="10" fill="rgba(255,255,255,0.5)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <line x1="24" y1="14" x2="24" y2="34" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+    </svg>
+  </div>
+  <div class="header-decor header-pill-right">
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+      <rect x="6" y="10" width="28" height="16" rx="8" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+      <line x1="20" y1="10" x2="20" y2="26" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+    </svg>
+  </div>
+  <div class="header-decor header-pill-top">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="12" fill="rgba(255,255,255,0.3)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      <circle cx="16" cy="16" r="5" fill="rgba(255,255,255,0.4)"/>
+    </svg>
+  </div>
+  <div class="header-content">
+    <h1>每日吃药打卡</h1>
+    <div class="subtitle" id="todayDate"></div>
+  </div>
+</div>
+<div class="banner" id="reminderBanner">
+  <span class="banner-icon">⏰</span>
+  <span id="bannerText"></span>
+  <span class="banner-close" id="bannerClose">✕</span>
+</div>
+<div class="container">
+  <div class="card card-accent" id="addDrugCard">
+    <div class="card-title">
+      <span id="formTitle">➕ 添加药品</span>
+      <span class="badge" id="formMode" style="display:none;">编辑中</span>
+    </div>
+    <div class="form-group">
+      <label>药品名称</label>
+      <input type="text" id="drugName" placeholder="例如：维生素C" maxlength="30">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>每次服用数量</label>
+        <input type="text" id="drugDosage" placeholder="例如：1片 / 2粒" maxlength="20">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>服用时间点</label>
+      <div class="time-list" id="timeList">
+        <div class="time-item">
+          <input type="time" value="08:00">
+        </div>
+      </div>
+      <button class="btn-add-time mt-8" id="addTimeBtn">＋ 添加时间点</button>
+    </div>
+    <button class="btn btn-primary mt-8" id="saveDrugBtn">添加药品</button>
+  </div>
+  <div class="card card-accent">
+    <div class="card-title">
+      <svg class="section-icon" viewBox="0 0 22 22" fill="none">
+        <rect x="3" y="2" width="16" height="18" rx="3" stroke="var(--primary)" stroke-width="1.8"/>
+        <line x1="7" y1="7" x2="15" y2="7" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="7" y1="11" x2="12" y2="11" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="7" y1="15" x2="14" y2="15" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="16" cy="16" r="4" fill="var(--primary)"/>
+        <path d="M14.5 16L15.5 17L17.5 15" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      今日任务
+      <span class="badge" id="taskCountBadge">0/0</span>
+    </div>
+    <ul class="task-list" id="taskList"></ul>
+    <div class="empty-state" id="taskEmpty">
+      <svg class="empty-illustration" viewBox="0 0 140 140" fill="none">
+        <circle cx="70" cy="70" r="65" fill="var(--primary-50)" stroke="var(--primary-light)" stroke-width="2"/>
+        <rect x="45" y="35" width="50" height="70" rx="10" fill="var(--card-solid)" stroke="var(--primary-light)" stroke-width="2"/>
+        <rect x="45" y="35" width="50" height="20" rx="10" fill="var(--primary)" opacity="0.15"/>
+        <line x1="55" y1="43" x2="63" y2="43" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="70" cy="75" r="12" fill="var(--primary-light)" stroke="var(--primary)" stroke-width="2"/>
+        <path d="M66 75L69 78L75 72" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="30" cy="50" r="4" fill="var(--primary)" opacity="0.2"/>
+        <circle cx="110" cy="60" r="3" fill="var(--primary)" opacity="0.15"/>
+        <circle cx="25" cy="90" r="2.5" fill="var(--primary)" opacity="0.1"/>
+        <rect x="100" y="30" width="12" height="8" rx="4" fill="var(--primary)" opacity="0.12" transform="rotate(20 100 30)"/>
+      </svg>
+      <p>今天没有待服用的药品<br>请先添加药品</p>
+    </div>
+  </div>
+  <div class="card" id="completedCard" style="display:none;">
+    <div class="card-title">
+      <svg class="section-icon" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="9" fill="var(--primary)" opacity="0.15"/>
+        <circle cx="11" cy="11" r="9" stroke="var(--primary)" stroke-width="1.8"/>
+        <path d="M7 11L10 14L15 9" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      今日已完成
+    </div>
+    <ul class="task-list" id="completedList"></ul>
+  </div>
+  <div class="card" id="historyCard">
+    <div class="card-title">
+      <svg class="section-icon" viewBox="0 0 22 22" fill="none">
+        <rect x="2" y="4" width="18" height="16" rx="3" stroke="var(--primary)" stroke-width="1.8"/>
+        <line x1="2" y1="9" x2="20" y2="9" stroke="var(--primary)" stroke-width="1.5"/>
+        <line x1="7" y1="2" x2="7" y2="6" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="15" y1="2" x2="15" y2="6" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round"/>
+        <rect x="5" y="12" width="3" height="4" rx="0.5" fill="var(--primary)" opacity="0.4"/>
+        <rect x="10" y="11" width="3" height="5" rx="0.5" fill="var(--primary)" opacity="0.6"/>
+        <rect x="15" y="13" width="3" height="3" rx="0.5" fill="var(--primary)" opacity="0.8"/>
+      </svg>
+      近一个月服药情况
+    </div>
+    <div id="historyContent"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">
+      <svg class="section-icon" viewBox="0 0 22 22" fill="none">
+        <rect x="3" y="5" width="16" height="14" rx="3" stroke="var(--primary)" stroke-width="1.8"/>
+        <path d="M3 9H19" stroke="var(--primary)" stroke-width="1.5"/>
+        <rect x="6" y="11" width="4" height="3" rx="1" fill="var(--primary)" opacity="0.3"/>
+        <rect x="12" y="11" width="4" height="3" rx="1" fill="var(--primary)" opacity="0.3"/>
+        <circle cx="8" cy="12.5" r="1" fill="var(--primary)" opacity="0.6"/>
+        <circle cx="14" cy="12.5" r="1" fill="var(--primary)" opacity="0.6"/>
+      </svg>
+      药品管理
+      <span class="badge" id="drugCount">0 种</span>
+    </div>
+    <div id="drugList"></div>
+    <div class="empty-state" id="drugEmpty">
+      <svg class="empty-illustration" viewBox="0 0 140 140" fill="none">
+        <circle cx="70" cy="70" r="65" fill="var(--primary-50)" stroke="var(--primary-light)" stroke-width="2"/>
+        <rect x="35" y="50" width="70" height="55" rx="8" fill="var(--card-solid)" stroke="var(--primary-light)" stroke-width="2"/>
+        <path d="M35 62H105" stroke="var(--primary)" stroke-width="2" opacity="0.3"/>
+        <rect x="40" y="54" width="18" height="5" rx="2" fill="var(--primary)" opacity="0.2"/>
+        <rect x="45" y="70" width="12" height="28" rx="3" fill="var(--primary-light)" stroke="var(--primary)" stroke-width="1.5" opacity="0.6"/>
+        <rect x="63" y="74" width="12" height="24" rx="3" fill="var(--primary-light)" stroke="var(--primary)" stroke-width="1.5" opacity="0.5"/>
+        <rect x="81" y="72" width="12" height="26" rx="3" fill="var(--primary-light)" stroke="var(--primary)" stroke-width="1.5" opacity="0.4"/>
+        <circle cx="70" cy="38" r="10" fill="var(--primary)" opacity="0.12"/>
+        <path d="M70 33V43M65 38H75" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      </svg>
+      <p>还没有添加药品<br>请在上方添加</p>
+    </div>
+  </div>
+</div>
+<div class="bottom-decor">
+  <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+    <rect x="20" y="40" width="80" height="40" rx="20" fill="var(--text)"/>
+    <line x1="60" y1="40" x2="60" y2="80" stroke="var(--bg)" stroke-width="2"/>
+  </svg>
+</div>
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">确认删除？</div>
+    <p id="modalBody" style="color:var(--text-secondary);font-size:14px;line-height:1.6;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="modalCancel">取消</button>
+      <button class="btn btn-danger-outline" id="modalConfirm">确认删除</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(function() {
+  'use strict';
+
+  var $ = function(id) { return document.getElementById(id); };
+  var todayDateEl = $('todayDate');
+  var reminderBanner = $('reminderBanner');
+  var bannerText = $('bannerText');
+  var bannerClose = $('bannerClose');
+  var drugName = $('drugName');
+  var drugDosage = $('drugDosage');
+  var timeList = $('timeList');
+  var addTimeBtn = $('addTimeBtn');
+  var saveDrugBtn = $('saveDrugBtn');
+  var formTitle = $('formTitle');
+  var formMode = $('formMode');
+  var taskList = $('taskList');
+  var taskEmpty = $('taskEmpty');
+  var taskCountBadge = $('taskCountBadge');
+  var completedCard = $('completedCard');
+  var completedList = $('completedList');
+  var drugListEl = $('drugList');
+  var drugEmpty = $('drugEmpty');
+  var drugCount = $('drugCount');
+  var confirmModal = $('confirmModal');
+  var modalTitle = $('modalTitle');
+  var modalBody = $('modalBody');
+  var modalCancel = $('modalCancel');
+  var modalConfirm = $('modalConfirm');
+  var toastEl = $('toast');
+
+  var drugs = [];
+  var checkins = {};
+  var reminded = {};
+  var todayStr = '';
+  var editingDrugId = null;
+  var confirmCallback = null;
+
+  function init() {
+    loadData();
+    var now = new Date();
+    todayStr = formatDate(now);
+    todayDateEl.textContent = todayStr + ' ' + getWeekday(now);
+
+    var storedDate = localStorage.getItem('_lastDate');
+    if (storedDate && storedDate !== todayStr) {
+      Object.keys(checkins).forEach(function(k) { if (k !== todayStr) delete checkins[k]; });
+      Object.keys(reminded).forEach(function(k) { if (k !== todayStr) delete reminded[k]; });
+      saveData();
+    }
+    if (!checkins[todayStr]) checkins[todayStr] = {};
+    if (!reminded[todayStr]) reminded[todayStr] = {};
+    localStorage.setItem('_lastDate', todayStr);
+
+    renderAll();
+    requestNotification();
+    checkReminders();
+    setInterval(checkReminders, 30000);
+  }
+
+  function loadData() {
+    try {
+      var d = localStorage.getItem('_drugs');
+      drugs = d ? JSON.parse(d) : [];
+      var c = localStorage.getItem('_checkins');
+      checkins = c ? JSON.parse(c) : {};
+      var r = localStorage.getItem('_reminded');
+      reminded = r ? JSON.parse(r) : {};
+    } catch(e) { drugs = []; checkins = {}; reminded = {}; }
+    if (drugs.length === 0) {
+      drugs.push({ id: genId(), name: '维生素C', dosage: '1片', times: ['08:00', '20:00'] });
+      drugs.push({ id: genId(), name: '阿莫西林', dosage: '2粒', times: ['12:30', '18:00'] });
+      saveData();
+    }
+  }
+
+  function saveData() {
+    localStorage.setItem('_drugs', JSON.stringify(drugs));
+    localStorage.setItem('_checkins', JSON.stringify(checkins));
+    localStorage.setItem('_reminded', JSON.stringify(reminded));
+  }
+
+  function genId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function formatDate(d) {
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  function getWeekday(d) {
+    var wk = ['日','一','二','三','四','五','六'];
+    return '星期' + wk[d.getDay()];
+  }
+
+  function requestNotification() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  function sendNotification(title, body) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      try { new Notification(title, { body: body }); } catch(e) {}
+    }
+  }
+
+  function checkReminders() {
+    if (!checkins[todayStr]) checkins[todayStr] = {};
+    if (!reminded[todayStr]) reminded[todayStr] = {};
+
+    var now = new Date();
+    var currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    drugs.forEach(function(drug) {
+      drug.times.forEach(function(t) {
+        var key = drug.id + '_' + t;
+        if (checkins[todayStr][key]) return;
+        if (reminded[todayStr][key]) return;
+
+        var parts = t.split(':');
+        var h = parseInt(parts[0], 10);
+        var m = parseInt(parts[1], 10);
+        var taskMinutes = h * 60 + m;
+        var diff = Math.abs(currentMinutes - taskMinutes);
+
+        if (diff <= 1) {
+          reminded[todayStr][key] = true;
+          saveData();
+          var msg = '⏰ 该吃【' + drug.name + '】了，' + drug.dosage;
+          sendNotification('吃药提醒', msg);
+          showBanner(msg);
+        }
+      });
+    });
+  }
+
+  function showBanner(text) {
+    bannerText.textContent = text;
+    reminderBanner.classList.add('show');
+  }
+
+  function hideBanner() {
+    reminderBanner.classList.remove('show');
+  }
+
+  bannerClose.addEventListener('click', function(e) {
+    e.stopPropagation();
+    hideBanner();
+  });
+
+  var toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.remove('show');
+    void toastEl.offsetWidth;
+    toastEl.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() {
+      toastEl.classList.remove('show');
+    }, 2500);
+  }
+
+  function renderAll() {
+    renderTaskList();
+    renderDrugList();
+    renderCompleted();
+    renderHistory();
+  }
+
+  function renderTaskList() {
+    var tasks = [];
+    drugs.forEach(function(drug) {
+      drug.times.forEach(function(t) {
+        var key = drug.id + '_' + t;
+        var done = !!(checkins[todayStr] && checkins[todayStr][key]);
+        tasks.push({ drugId: drug.id, time: t, name: drug.name, dosage: drug.dosage, key: key, done: done });
+      });
+    });
+    tasks.sort(function(a, b) { return a.time.localeCompare(b.time); });
+
+    taskList.innerHTML = '';
+    var total = tasks.length;
+    var doneCount = tasks.filter(function(t) { return t.done; }).length;
+    taskCountBadge.textContent = doneCount + '/' + total;
+
+    if (total === 0) {
+      taskEmpty.style.display = 'block';
+      return;
+    }
+    taskEmpty.style.display = 'none';
+
+    tasks.forEach(function(t) {
+      var li = document.createElement('li');
+      li.className = 'task-item';
+      var timeSpan = document.createElement('span');
+      timeSpan.className = 'task-time';
+      timeSpan.textContent = t.time;
+      var infoDiv = document.createElement('div');
+      infoDiv.className = 'task-info';
+      var nameDiv = document.createElement('div');
+      nameDiv.className = 'task-name';
+      nameDiv.textContent = t.name;
+      var dosageDiv = document.createElement('div');
+      dosageDiv.className = 'task-dosage';
+      dosageDiv.textContent = t.dosage;
+      infoDiv.appendChild(nameDiv);
+      infoDiv.appendChild(dosageDiv);
+      var checkBtn = document.createElement('button');
+      checkBtn.className = 'task-check' + (t.done ? ' done' : '');
+      checkBtn.textContent = t.done ? '✓' : '';
+      checkBtn.disabled = t.done;
+      if (!t.done) {
+        (function(drugId, timeStr, key) {
+          checkBtn.addEventListener('click', function() {
+            if (!checkins[todayStr]) checkins[todayStr] = {};
+            checkins[todayStr][key] = true;
+            saveData();
+            showToast('✅ 已打卡：' + getDrugName(drugId) + ' ' + timeStr);
+            renderAll();
+          });
+        })(t.drugId, t.time, t.key);
+      }
+      li.appendChild(timeSpan);
+      li.appendChild(infoDiv);
+      li.appendChild(checkBtn);
+      taskList.appendChild(li);
+    });
+  }
+
+  function renderCompleted() {
+    var tasks = [];
+    drugs.forEach(function(drug) {
+      drug.times.forEach(function(t) {
+        var key = drug.id + '_' + t;
+        if (checkins[todayStr] && checkins[todayStr][key]) {
+          tasks.push({ time: t, name: drug.name, dosage: drug.dosage });
+        }
+      });
+    });
+    tasks.sort(function(a, b) { return a.time.localeCompare(b.time); });
+    completedList.innerHTML = '';
+    if (tasks.length === 0) {
+      completedCard.style.display = 'none';
+      return;
+    }
+    completedCard.style.display = 'block';
+    tasks.forEach(function(t) {
+      var li = document.createElement('li');
+      li.className = 'task-item';
+      var timeSpan = document.createElement('span');
+      timeSpan.className = 'task-time';
+      timeSpan.textContent = t.time;
+      timeSpan.style.color = 'var(--text-secondary)';
+      timeSpan.style.fontSize = '16px';
+      var infoDiv = document.createElement('div');
+      infoDiv.className = 'task-info';
+      var nameDiv = document.createElement('div');
+      nameDiv.className = 'task-name';
+      nameDiv.textContent = t.name;
+      var dosageDiv = document.createElement('div');
+      dosageDiv.className = 'task-dosage';
+      dosageDiv.textContent = t.dosage;
+      infoDiv.appendChild(nameDiv);
+      infoDiv.appendChild(dosageDiv);
+      var doneIcon = document.createElement('span');
+      doneIcon.textContent = '✓';
+      doneIcon.style.cssText = 'color:var(--primary);font-size:20px;font-weight:bold;flex-shrink:0;';
+      li.appendChild(timeSpan);
+      li.appendChild(infoDiv);
+      li.appendChild(doneIcon);
+      completedList.appendChild(li);
+    });
+  }
+
+  function renderHistory() {
+    var el = document.getElementById('historyContent');
+    if (!el) return;
+    el.innerHTML = '';
+
+    var now = new Date();
+    var days = [];
+    for (var i = 29; i >= 0; i--) {
+      var d = new Date(now);
+      d.setDate(d.getDate() - i);
+      days.push(d);
+    }
+
+    var totalExpectedPerDay = 0;
+    drugs.forEach(function(drug) { totalExpectedPerDay += drug.times.length; });
+
+    var totalDone = 0, totalExpected = 0;
+
+    var summaryDiv = document.createElement('div');
+    summaryDiv.className = 'history-summary';
+
+    var rateItem = document.createElement('div');
+    rateItem.className = 'history-summary-item';
+    var rateNum = document.createElement('span');
+    rateNum.className = 'num';
+    rateItem.appendChild(rateNum);
+    var rateLabel = document.createElement('span');
+    rateLabel.className = 'label';
+    rateLabel.textContent = '打卡率';
+    rateItem.appendChild(rateLabel);
+    summaryDiv.appendChild(rateItem);
+
+    var doneItem = document.createElement('div');
+    doneItem.className = 'history-summary-item';
+    var doneNum = document.createElement('span');
+    doneNum.className = 'num';
+    doneItem.appendChild(doneNum);
+    var doneLabel = document.createElement('span');
+    doneLabel.className = 'label';
+    doneLabel.textContent = '已完成';
+    doneItem.appendChild(doneLabel);
+    summaryDiv.appendChild(doneItem);
+
+    var daysItem = document.createElement('div');
+    daysItem.className = 'history-summary-item';
+    var daysNum = document.createElement('span');
+    daysNum.className = 'num';
+    daysNum.textContent = '30';
+    daysItem.appendChild(daysNum);
+    var daysLabel = document.createElement('span');
+    daysLabel.className = 'label';
+    daysLabel.textContent = '统计天数';
+    daysItem.appendChild(daysLabel);
+    summaryDiv.appendChild(daysItem);
+
+    el.appendChild(summaryDiv);
+
+    var rateBar = document.createElement('div');
+    rateBar.className = 'history-rate-bar';
+    var rateFill = document.createElement('div');
+    rateFill.className = 'history-rate-fill';
+    rateBar.appendChild(rateFill);
+    el.appendChild(rateBar);
+
+    var list = document.createElement('ul');
+    list.className = 'history-list';
+    list.style.marginTop = '12px';
+
+    days.forEach(function(d) {
+      var dateStr = formatDate(d);
+      var wk = getWeekday(d);
+      var dayData = checkins[dateStr] || {};
+      var dayDrugs = {};
+
+      Object.keys(dayData).forEach(function(key) {
+        if (dayData[key]) {
+          var parts = key.split('_');
+          var drugId = parts[0];
+          var timeStr = parts[1];
+          if (!dayDrugs[drugId]) dayDrugs[drugId] = [];
+          dayDrugs[drugId].push(timeStr);
+        }
+      });
+
+      var dayDone = Object.keys(dayDrugs).reduce(function(sum, id) { return sum + dayDrugs[id].length; }, 0);
+      var hasAny = Object.keys(dayData).length > 0;
+
+      var li = document.createElement('li');
+      li.className = 'history-item';
+      if (dateStr === todayStr) {
+        li.style.cssText = 'background:var(--primary-light);border-radius:var(--radius-xs);';
+      }
+
+      var dateSpan = document.createElement('span');
+      dateSpan.className = 'history-date';
+      dateSpan.textContent = dateStr.slice(5);
+      li.appendChild(dateSpan);
+
+      var wkSpan = document.createElement('span');
+      wkSpan.className = 'history-weekday';
+      wkSpan.textContent = wk;
+      li.appendChild(wkSpan);
+
+      var statusSpan = document.createElement('span');
+      statusSpan.className = 'history-status';
+
+      if (hasAny) {
+        Object.keys(dayDrugs).forEach(function(did) {
+          var dName = getDrugName(did);
+          dayDrugs[did].forEach(function(t) {
+            var pill = document.createElement('span');
+            pill.className = 'history-pill done';
+            var ht = document.createElement('span');
+            ht.className = 'h-time';
+            ht.textContent = t;
+            pill.appendChild(ht);
+            pill.appendChild(document.createTextNode(' ' + (dName || '')));
+            statusSpan.appendChild(pill);
+          });
+        });
+        totalDone += dayDone;
+        totalExpected += dayDone;
+      } else {
+        var emptySpan = document.createElement('span');
+        emptySpan.className = 'history-empty';
+        emptySpan.textContent = '无记录';
+        statusSpan.appendChild(emptySpan);
+      }
+
+      li.appendChild(statusSpan);
+      list.appendChild(li);
+    });
+
+    el.appendChild(list);
+
+    var rate = totalExpected > 0 ? Math.round(totalDone / totalExpected * 100) : 0;
+    rateNum.textContent = rate + '%';
+    doneNum.textContent = String(totalDone);
+    rateFill.style.width = rate + '%';
+  }
+
+  function getDrugName(id) {
+    var d = drugs.find(function(x) { return x.id === id; });
+    return d ? d.name : '';
+  }
+
+  function renderDrugList() {
+    drugListEl.innerHTML = '';
+    if (drugs.length === 0) {
+      drugEmpty.style.display = 'block';
+      drugCount.textContent = '0 种';
+      return;
+    }
+    drugEmpty.style.display = 'none';
+    drugCount.textContent = drugs.length + ' 种';
+
+    drugs.forEach(function(drug) {
+      var div = document.createElement('div');
+      div.className = 'drug-item';
+      var info = document.createElement('div');
+      info.className = 'drug-info';
+      var nameDiv = document.createElement('div');
+      nameDiv.className = 'drug-name';
+      nameDiv.textContent = drug.name;
+      var metaDiv = document.createElement('div');
+      metaDiv.className = 'drug-meta';
+      metaDiv.textContent = '每次 ' + drug.dosage;
+      var timesDiv = document.createElement('div');
+      timesDiv.className = 'drug-times';
+      drug.times.forEach(function(t) {
+        var tag = document.createElement('span');
+        tag.className = 'drug-time-tag';
+        tag.textContent = t;
+        timesDiv.appendChild(tag);
+      });
+      info.appendChild(nameDiv);
+      info.appendChild(metaDiv);
+      info.appendChild(timesDiv);
+      var actions = document.createElement('div');
+      actions.className = 'drug-actions';
+      var editBtn = document.createElement('button');
+      editBtn.className = 'btn btn-sm btn-outline';
+      editBtn.textContent = '编辑';
+      (function(id) {
+        editBtn.addEventListener('click', function() { startEdit(id); });
+      })(drug.id);
+      var delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-sm btn-danger-outline';
+      delBtn.textContent = '删除';
+      (function(id, name) {
+        delBtn.addEventListener('click', function() { confirmDelete(id, name); });
+      })(drug.id, drug.name);
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+      div.appendChild(info);
+      div.appendChild(actions);
+      drugListEl.appendChild(div);
+    });
+  }
+
+  function resetForm() {
+    drugName.value = '';
+    drugDosage.value = '';
+    timeList.innerHTML = '<div class="time-item"><input type="time" value="08:00"></div>';
+    editingDrugId = null;
+    formTitle.textContent = '➕ 添加药品';
+    formMode.style.display = 'none';
+    saveDrugBtn.textContent = '添加药品';
+  }
+
+  function startEdit(id) {
+    var drug = drugs.find(function(d) { return d.id === id; });
+    if (!drug) return;
+    editingDrugId = id;
+    drugName.value = drug.name;
+    drugDosage.value = drug.dosage;
+    timeList.innerHTML = '';
+    drug.times.forEach(function(t) { addTimeInput(t); });
+    formTitle.textContent = '✏️ 编辑药品';
+    formMode.style.display = 'inline';
+    saveDrugBtn.textContent = '保存修改';
+    document.getElementById('addDrugCard').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function addTimeInput(val) {
+    var div = document.createElement('div');
+    div.className = 'time-item';
+    var inp = document.createElement('input');
+    inp.type = 'time';
+    inp.value = val || '08:00';
+    var rmBtn = document.createElement('button');
+    rmBtn.className = 'remove-time';
+    rmBtn.textContent = '×';
+    rmBtn.type = 'button';
+    rmBtn.addEventListener('click', function() { div.remove(); });
+    div.appendChild(inp);
+    div.appendChild(rmBtn);
+    timeList.appendChild(div);
+  }
+
+  addTimeBtn.addEventListener('click', function() {
+    addTimeInput('08:00');
+  });
+
+  saveDrugBtn.addEventListener('click', function() {
+    var name = drugName.value.trim();
+    var dosage = drugDosage.value.trim();
+    var timeInputs = timeList.querySelectorAll('input[type="time"]');
+    var times = [];
+    timeInputs.forEach(function(inp) {
+      if (inp.value) times.push(inp.value);
+    });
+    times = times.filter(function(v, i, a) { return a.indexOf(v) === i; });
+    times.sort();
+
+    if (!name) { showToast('⚠️ 请输入药品名称'); return; }
+    if (!dosage) { showToast('⚠️ 请输入服用数量'); return; }
+    if (times.length === 0) { showToast('⚠️ 请至少添加一个服用时间点'); return; }
+
+    if (editingDrugId) {
+      var idx = drugs.findIndex(function(d) { return d.id === editingDrugId; });
+      if (idx !== -1) {
+        drugs[idx].name = name;
+        drugs[idx].dosage = dosage;
+        drugs[idx].times = times;
+        showToast('✅ 已更新：' + name);
+      }
+    } else {
+      drugs.push({ id: genId(), name: name, dosage: dosage, times: times });
+      showToast('✅ 已添加：' + name);
+    }
+    saveData();
+    resetForm();
+    renderAll();
+  });
+
+  function confirmDelete(id, name) {
+    confirmModal.classList.add('show');
+    modalTitle.textContent = '确认删除？';
+    modalBody.textContent = '确定要删除药品「' + name + '」及其所有打卡记录吗？';
+    confirmCallback = function() {
+      drugs = drugs.filter(function(d) { return d.id !== id; });
+      Object.keys(checkins).forEach(function(date) {
+        Object.keys(checkins[date]).forEach(function(key) {
+          if (key.startsWith(id + '_')) delete checkins[date][key];
+        });
+      });
+      Object.keys(reminded).forEach(function(date) {
+        Object.keys(reminded[date]).forEach(function(key) {
+          if (key.startsWith(id + '_')) delete reminded[date][key];
+        });
+      });
+      saveData();
+      resetForm();
+      renderAll();
+      showToast('🗑️ 已删除：' + name);
+    };
+  }
+
+  modalCancel.addEventListener('click', function() {
+    confirmModal.classList.remove('show');
+    confirmCallback = null;
+  });
+
+  modalConfirm.addEventListener('click', function() {
+    confirmModal.classList.remove('show');
+    if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+  });
+
+  confirmModal.addEventListener('click', function(e) {
+    if (e.target === confirmModal) {
+      confirmModal.classList.remove('show');
+      confirmCallback = null;
+    }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.tagName === 'INPUT') {
+      if (!confirmModal.classList.contains('show')) {
+        saveDrugBtn.click();
+      }
+    }
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
